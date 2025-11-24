@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Calendario de Marketing</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-soft: #111827;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.1);
+      --border: #1f2937;
+      --text: #f9fafb;
+      --text-soft: #9ca3af;
+      --danger: #f97373;
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+      --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.8);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0, #020617 55%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .app {
+      max-width: 1200px;
+      width: 100%;
+      background: linear-gradient(145deg, #020617, #020617, #020617);
+      border-radius: 24px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .app-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .app-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .app-pill {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+    }
+
+    .app-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-soft);
+    }
+
+    .month-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .month-title {
+      font-weight: 500;
+      font-size: 0.95rem;
+      min-width: 190px;
+      text-align: center;
+    }
+
+    .btn {
+      border: 1px solid var(--border);
+      background: #020617;
+      color: var(--text);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease-out;
+    }
+
+    .btn-icon {
+      padding: 6px;
+      width: 28px;
+      height: 28px;
+    }
+
+    .btn:hover {
+      border-color: rgba(148, 163, 184, 0.6);
+      background: #020617;
+      transform: translateY(-0.5px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #38bdf8, #22c55e);
+      border-color: transparent;
+      color: #0b1120;
+      font-weight: 500;
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.03);
+      transform: translateY(-1px);
+    }
+
+    .app-body {
+      display: grid;
+      grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.3fr);
+      border-top: 1px solid rgba(15, 23, 42, 0.8);
+      background: radial-gradient(circle at top left, #0b1120, #020617);
+      min-height: 540px;
+    }
+
+    @media (max-width: 900px) {
+      .app-body {
+        grid-template-columns: 1fr;
+      }
+      .side-panel {
+        border-left: none;
+        border-top: 1px solid var(--border);
+      }
+    }
+
+    /* Calendario */
+    .calendar {
+      padding: 16px 20px 20px;
+      border-right: 1px solid var(--border);
+    }
+
+    @media (max-width: 900px) {
+      .calendar {
+        border-right: none;
+      }
+    }
+
+    .calendar-grid {
+      margin-top: 8px;
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(30, 64, 175, 0.7);
+      background: radial-gradient(circle at top, #020617, #020617);
+      overflow: hidden;
+    }
+
+    .calendar-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      background: linear-gradient(to right, #0b1120, #020617);
+      border-bottom: 1px solid rgba(30, 64, 175, 0.7);
+    }
+
+    .weekday {
+      padding: 8px 10px;
+      text-align: center;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+    }
+
+    .calendar-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    .day {
+      min-height: 92px;
+      border-right: 1px solid rgba(15, 23, 42, 0.9);
+      border-bottom: 1px solid rgba(15, 23, 42, 0.9);
+      padding: 6px;
+      font-size: 0.78rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      background: radial-gradient(circle at top, #020617, #020617);
+      cursor: pointer;
+      transition: background 0.12s ease-out, box-shadow 0.12s ease-out,
+        transform 0.08s ease-out;
+    }
+
+    .day:nth-child(7n) {
+      border-right: none;
+    }
+
+    .day-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+
+    .day-number {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      color: var(--text-soft);
+    }
+
+    .day.today .day-number {
+      background: var(--accent);
+      color: #0b1120;
+      font-weight: 600;
+    }
+
+    .day.outside-month {
+      background: radial-gradient(circle at top, #020617, #020617);
+      color: #4b5563;
+    }
+
+    .day.outside-month .day-number {
+      color: #4b5563;
+    }
+
+    .day.selected {
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.8) inset,
+        0 0 0 1px rgba(56, 189, 248, 0.4);
+      background: radial-gradient(circle at top, #020617, #020617);
+      transform: translateY(-1px);
+    }
+
+    .day:hover {
+      background: radial-gradient(circle at top, #020617, #020617);
+    }
+
+    .event-dots {
+      display: flex;
+      gap: 4px;
+      justify-content: flex-end;
+    }
+
+    .event-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.9);
+      opacity: 0.8;
+    }
+
+    .event-dot.story {
+      background: #38bdf8;
+    }
+
+    .event-dot.reel {
+      background: #22c55e;
+    }
+
+    .event-dot.tiktok {
+      background: #f97316;
+    }
+
+    .event-list-mini {
+      margin-top: 2px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .event-mini {
+      font-size: 0.68rem;
+      color: #9ca3af;
+      padding: 2px 4px;
+      border-radius: 4px;
+      background: rgba(15, 23, 42, 0.9);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .event-mini strong {
+      color: #e5e7eb;
+      font-weight: 500;
+    }
+
+    /* Panel lateral */
+    .side-panel {
+      padding: 16px 20px 20px;
+      background: radial-gradient(circle at top right, #020617, #020617);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .side-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .side-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .side-title {
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .side-date {
+      font-size: 0.8rem;
+      color: var(--text-soft);
+    }
+
+    .events-list {
+      margin-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+    }
+
+    .event-card {
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(30, 64, 175, 0.7);
+      background: radial-gradient(circle at top left, #020617, #020617);
+      padding: 10px 10px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .event-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .event-time {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--accent);
+    }
+
+    .event-title {
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .event-meta {
+      font-size: 0.75rem;
+      color: var(--text-soft);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: rgba(15, 23, 42, 0.9);
+      color: #e5e7eb;
+    }
+
+    .event-notes {
+      font-size: 0.8rem;
+      color: #d1d5db;
+    }
+
+    .event-actions {
+      margin-top: 2px;
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border-color: rgba(55, 65, 81, 0.9);
+      color: #9ca3af;
+      font-size: 0.75rem;
+    }
+
+    .btn-ghost:hover {
+      border-color: rgba(148, 163, 184, 0.8);
+      color: #e5e7eb;
+      background: #020617;
+    }
+
+    .btn-danger {
+      border-color: rgba(248, 113, 113, 0.9);
+      color: #fecaca;
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .empty-state {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: var(--text-soft);
+      padding: 10px;
+      border-radius: var(--radius-md);
+      border: 1px dashed rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.7);
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 420px;
+      background: #020617;
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      padding: 16px 18px 14px;
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .modal-title {
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .modal-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .modal-footer {
+      margin-top: 8px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.8rem;
+    }
+
+    .field-label {
+      color: var(--text-soft);
+      font-size: 0.78rem;
+    }
+
+    .field-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    input[type="text"],
+    input[type="time"],
+    select,
+    textarea {
+      width: 100%;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: #020617;
+      color: var(--text);
+      font-size: 0.8rem;
+      padding: 6px 8px;
+      outline: none;
+      transition: border 0.12s ease-out, box-shadow 0.12s ease-out,
+        background 0.12s ease-out;
+    }
+
+    input[type="text"]:focus,
+    input[type="time"]:focus,
+    select:focus,
+    textarea:focus {
+      border-color: rgba(56, 189, 248, 0.9);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.5);
+      background: #020617;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    .error-text {
+      color: #fecaca;
+      font-size: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div class="app-title-block">
+        <div class="app-title">
+          Calendario de Contenido
+          <span class="app-pill">Marketing interno</span>
+        </div>
+        <div class="app-subtitle">
+          Planificación semanal de historias, reels, TikToks y posteos para que nadie se pise.
+        </div>
+      </div>
+      <div class="month-controls">
+        <button class="btn btn-icon" id="prev-month" title="Mes anterior">
+          ‹
+        </button>
+        <div class="month-title" id="month-title"></div>
+        <button class="btn btn-icon" id="next-month" title="Mes siguiente">
+          ›
+        </button>
+        <button class="btn" id="today-btn">Hoy</button>
+        <button class="btn btn-primary" id="add-event-main">
+          + Nuevo contenido
+        </button>
+      </div>
+    </header>
+
+    <div class="app-body">
+      <!-- Calendario -->
+      <section class="calendar">
+        <div class="calendar-grid">
+          <div class="calendar-weekdays">
+            <div class="weekday">Lun</div>
+            <div class="weekday">Mar</div>
+            <div class="weekday">Mié</div>
+            <div class="weekday">Jue</div>
+            <div class="weekday">Vie</div>
+            <div class="weekday">Sáb</div>
+            <div class="weekday">Dom</div>
+          </div>
+          <div class="calendar-days" id="calendar-days"></div>
+        </div>
+      </section>
+
+      <!-- Panel lateral -->
+      <aside class="side-panel">
+        <div class="side-header">
+          <div class="side-title-block">
+            <div class="side-title" id="side-title">
+              Contenido del día
+            </div>
+            <div class="side-date" id="side-date"></div>
+          </div>
+          <button class="btn btn-primary" id="add-event-side">
+            + Añadir
+          </button>
+        </div>
+
+        <div class="events-list" id="events-list"></div>
+        <div class="empty-state" id="empty-state" style="display:none;">
+          Todavía no hay nada programado para este día.<br />
+          Usá “Añadir” para agendar historias, reels, TikToks o lo que toque.
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Modal crear/editar -->
+  <div class="modal-backdrop" id="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title" id="modal-title">Nuevo contenido</div>
+          <div class="side-date" id="modal-date-label"></div>
+        </div>
+        <button class="btn btn-icon btn-ghost" id="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="field-group">
+          <label class="field-label" for="field-date">Fecha</label>
+          <input type="text" id="field-date" readonly />
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label" for="field-time">Hora</label>
+            <input type="time" id="field-time" />
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="field-channel">Tipo</label>
+            <select id="field-channel">
+              <option value="">Seleccionar…</option>
+              <option value="Historia">Historia</option>
+              <option value="Reel">Reel</option>
+              <option value="TikTok">TikTok</option>
+              <option value="Post feed">Post feed</option>
+              <option value="Email">Email</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="field-title">Título / resumen*</label>
+          <input
+            type="text"
+            id="field-title"
+            placeholder="Ej: Historia IG + TikTok: teaser de nuevo producto"
+          />
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label" for="field-platform">Plataforma</label>
+            <input
+              type="text"
+              id="field-platform"
+              placeholder="Ej: Instagram, TikTok…"
+            />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="field-notes">Detalle / copy / links</label>
+          <textarea
+            id="field-notes"
+            placeholder="Breve descripción, CTA, links, etc."
+          ></textarea>
+        </div>
+
+        <div class="error-text" id="modal-error" style="display:none;">
+          Completá al menos fecha, hora y título.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="modal-cancel">Cancelar</button>
+        <button class="btn btn-primary" id="modal-save">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===============================
+    // Utilidades de fecha
+    // ===============================
+    const API_BASE = "/api";
+
+    const state = {
+      currentMonth: null, // Date al 1er día del mes
+      selectedDate: null, // Date del día seleccionado
+      eventsByDate: {},   // { 'YYYY-MM-DD': [events...] }
+      editingEventId: null
+    };
+
+    function formatDateKey(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatDateHuman(date) {
+      return date.toLocaleDateString("es-ES", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+    }
+
+    function getMonthRange(date) {
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      const first = new Date(year, month, 1);
+      const last = new Date(year, month + 1, 0);
+      const startKey = formatDateKey(first);
+      const endKey = formatDateKey(last);
+      return { first, last, startKey, endKey };
+    }
+
+    function parseDateKey(key) {
+      const [y, m, d] = key.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    // ===============================
+    // Render del calendario
+    // ===============================
+    const monthTitleEl = document.getElementById("month-title");
+    const calendarDaysEl = document.getElementById("calendar-days");
+    const sideDateEl = document.getElementById("side-date");
+    const sideTitleEl = document.getElementById("side-title");
+    const eventsListEl = document.getElementById("events-list");
+    const emptyStateEl = document.getElementById("empty-state");
+
+    function renderCalendar() {
+      const monthDate = state.currentMonth;
+      const { first, last } = getMonthRange(monthDate);
+
+      monthTitleEl.textContent = monthDate.toLocaleDateString("es-ES", {
+        month: "long",
+        year: "numeric",
+      });
+
+      const firstDayIndex = (first.getDay() + 6) % 7; // lunes=0
+      const daysInMonth = last.getDate();
+
+      const prevMonthLast = new Date(
+        monthDate.getFullYear(),
+        monthDate.getMonth(),
+        0
+      ).getDate();
+
+      const totalCells = 42; // 6 filas x 7 días
+      const cells = [];
+
+      for (let i = 0; i < totalCells; i++) {
+        const dayNumber =
+          i < firstDayIndex
+            ? prevMonthLast - (firstDayIndex - 1 - i)
+            : i - firstDayIndex + 1;
+
+        const cellDate =
+          i < firstDayIndex
+            ? new Date(monthDate.getFullYear(), monthDate.getMonth() - 1, dayNumber)
+            : i >= firstDayIndex + daysInMonth
+            ? new Date(
+                monthDate.getFullYear(),
+                monthDate.getMonth() + 1,
+                dayNumber
+              )
+            : new Date(monthDate.getFullYear(), monthDate.getMonth(), dayNumber);
+
+        const isOutsideMonth = cellDate.getMonth() !== monthDate.getMonth();
+        const isToday = formatDateKey(cellDate) === formatDateKey(new Date());
+        const isSelected =
+          state.selectedDate &&
+          formatDateKey(cellDate) === formatDateKey(state.selectedDate);
+
+        const key = formatDateKey(cellDate);
+        const events = state.eventsByDate[key] || [];
+
+        const div = document.createElement("div");
+        div.className = "day";
+        if (isOutsideMonth) div.classList.add("outside-month");
+        if (isToday) div.classList.add("today");
+        if (isSelected) div.classList.add("selected");
+        div.dataset.date = key;
+
+        const header = document.createElement("div");
+        header.className = "day-header";
+
+        const num = document.createElement("div");
+        num.className = "day-number";
+        num.textContent = cellDate.getDate();
+        header.appendChild(num);
+
+        const dots = document.createElement("div");
+        dots.className = "event-dots";
+        const hasStory = events.some(
+          (e) => (e.channel || "").toLowerCase().includes("historia")
+        );
+        const hasReel = events.some(
+          (e) => (e.channel || "").toLowerCase().includes("reel")
+        );
+        const hasTikTok = events.some(
+          (e) => (e.channel || "").toLowerCase().includes("tik")
+        );
+
+        if (events.length > 0) {
+          const dotBase = document.createElement("div");
+          dotBase.className = "event-dot";
+          dots.appendChild(dotBase);
+        }
+        if (hasStory) {
+          const d = document.createElement("div");
+          d.className = "event-dot story";
+          dots.appendChild(d);
+        }
+        if (hasReel) {
+          const d = document.createElement("div");
+          d.className = "event-dot reel";
+          dots.appendChild(d);
+        }
+        if (hasTikTok) {
+          const d = document.createElement("div");
+          d.className = "event-dot tiktok";
+          dots.appendChild(d);
+        }
+
+        header.appendChild(dots);
+        div.appendChild(header);
+
+        if (events.length > 0) {
+          const miniList = document.createElement("div");
+          miniList.className = "event-list-mini";
+          events.slice(0, 3).forEach((ev) => {
+            const item = document.createElement("div");
+            item.className = "event-mini";
+            const time = ev.time?.slice(0, 5) || "";
+            item.innerHTML = `<strong>${time}</strong> ${
+              ev.channel || ""
+            } – ${ev.title}`;
+            miniList.appendChild(item);
+          });
+          div.appendChild(miniList);
+        }
+
+        div.addEventListener("click", () => {
+          state.selectedDate = parseDateKey(key);
+          renderCalendar();
+          renderSidePanel();
+        });
+
+        cells.push(div);
+      }
+
+      calendarDaysEl.innerHTML = "";
+      cells.forEach((c) => calendarDaysEl.appendChild(c));
+    }
+
+    // ===============================
+    // Panel lateral
+    // ===============================
+    function renderSidePanel() {
+      if (!state.selectedDate) state.selectedDate = new Date();
+
+      const key = formatDateKey(state.selectedDate);
+      const events = (state.eventsByDate[key] || []).slice().sort((a, b) =>
+        (a.time || "").localeCompare(b.time || "")
+      );
+
+      sideDateEl.textContent = formatDateHuman(state.selectedDate);
+      sideTitleEl.textContent = "Contenido del día";
+
+      eventsListEl.innerHTML = "";
+
+      if (events.length === 0) {
+        emptyStateEl.style.display = "block";
+        return;
+      } else {
+        emptyStateEl.style.display = "none";
+      }
+
+      events.forEach((ev) => {
+        const card = document.createElement("div");
+        card.className = "event-card";
+
+        const header = document.createElement("div");
+        header.className = "event-header";
+
+        const time = document.createElement("div");
+        time.className = "event-time";
+        time.textContent = (ev.time || "").slice(0, 5);
+
+        const title = document.createElement("div");
+        title.className = "event-title";
+        title.textContent = ev.title;
+
+        header.appendChild(title);
+        header.appendChild(time);
+        card.appendChild(header);
+
+        const meta = document.createElement("div");
+        meta.className = "event-meta";
+        if (ev.channel) {
+          const b = document.createElement("span");
+          b.className = "badge";
+          b.textContent = ev.channel;
+          meta.appendChild(b);
+        }
+        if (ev.platform) {
+          const b = document.createElement("span");
+          b.className = "badge";
+          b.textContent = ev.platform;
+          meta.appendChild(b);
+        }
+        card.appendChild(meta);
+
+        if (ev.notes) {
+          const notes = document.createElement("div");
+          notes.className = "event-notes";
+          notes.textContent = ev.notes;
+          card.appendChild(notes);
+        }
+
+        const actions = document.createElement("div");
+        actions.className = "event-actions";
+
+        const editBtn = document.createElement("button");
+        editBtn.className = "btn btn-ghost";
+        editBtn.textContent = "Editar";
+        editBtn.addEventListener("click", () => openModal(key, ev));
+
+        const delBtn = document.createElement("button");
+        delBtn.className = "btn btn-ghost btn-danger";
+        delBtn.textContent = "Eliminar";
+        delBtn.addEventListener("click", () => deleteEvent(ev.id));
+
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+        card.appendChild(actions);
+
+        eventsListEl.appendChild(card);
+      });
+    }
+
+    // ===============================
+    // Carga de eventos (API)
+// ===============================
+    async function loadEventsForMonth() {
+      const { startKey, endKey } = getMonthRange(state.currentMonth);
+
+      try {
+        const res = await fetch(
+          `${API_BASE}/events?start=${startKey}&end=${endKey}`
+        );
+        const data = await res.json();
+
+        const grouped = {};
+        data.forEach((ev) => {
+          if (!grouped[ev.date]) grouped[ev.date] = [];
+          grouped[ev.date].push(ev);
+        });
+        state.eventsByDate = grouped;
+
+        renderCalendar();
+        renderSidePanel();
+      } catch (err) {
+        console.error("Error cargando eventos:", err);
+      }
+    }
+
+    async function saveEvent(payload, id = null) {
+      const url = id ? `${API_BASE}/events/${id}` : `${API_BASE}/events`;
+      const method = id ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || "Error al guardar");
+      }
+
+      await loadEventsForMonth();
+    }
+
+    async function deleteEvent(id) {
+      if (!confirm("¿Eliminar este evento de contenido?")) return;
+      try {
+        await fetch(`${API_BASE}/events/${id}`, { method: "DELETE" });
+        await loadEventsForMonth();
+      } catch (err) {
+        console.error("Error al eliminar:", err);
+      }
+    }
+
+    // ===============================
+    // Modal
+    // ===============================
+    const modalBackdrop = document.getElementById("modal-backdrop");
+    const modalTitleEl = document.getElementById("modal-title");
+    const modalDateLabelEl = document.getElementById("modal-date-label");
+    const fieldDate = document.getElementById("field-date");
+    const fieldTime = document.getElementById("field-time");
+    const fieldChannel = document.getElementById("field-channel");
+    const fieldTitle = document.getElementById("field-title");
+    const fieldPlatform = document.getElementById("field-platform");
+    const fieldNotes = document.getElementById("field-notes");
+    const modalErrorEl = document.getElementById("modal-error");
+
+    function openModal(dateKey, event = null) {
+      const date = parseDateKey(dateKey);
+      state.selectedDate = date;
+      modalBackdrop.classList.add("show");
+      modalErrorEl.style.display = "none";
+
+      fieldDate.value = dateKey;
+      modalDateLabelEl.textContent = formatDateHuman(date);
+
+      if (event) {
+        state.editingEventId = event.id;
+        modalTitleEl.textContent = "Editar contenido";
+        fieldTime.value = event.time || "";
+        fieldChannel.value = event.channel || "";
+        fieldTitle.value = event.title || "";
+        fieldPlatform.value = event.platform || "";
+        fieldNotes.value = event.notes || "";
+      } else {
+        state.editingEventId = null;
+        modalTitleEl.textContent = "Nuevo contenido";
+        fieldTime.value = "09:00";
+        fieldChannel.value = "";
+        fieldTitle.value = "";
+        fieldPlatform.value = "";
+        fieldNotes.value = "";
+      }
+    }
+
+    function closeModal() {
+      modalBackdrop.classList.remove("show");
+    }
+
+    document.getElementById("modal-close").addEventListener("click", closeModal);
+    document.getElementById("modal-cancel").addEventListener("click", closeModal);
+
+    document.getElementById("modal-save").addEventListener("click", async () => {
+      const date = fieldDate.value;
+      const time = fieldTime.value || "09:00";
+      const title = fieldTitle.value.trim();
+      const channel = fieldChannel.value;
+      const platform = fieldPlatform.value.trim();
+      const notes = fieldNotes.value.trim();
+
+      if (!date || !time || !title) {
+        modalErrorEl.style.display = "block";
+        return;
+      }
+
+      modalErrorEl.style.display = "none";
+
+      const payload = { date, time, title, channel, platform, notes };
+
+      try {
+        await saveEvent(payload, state.editingEventId);
+        closeModal();
+      } catch (err) {
+        console.error(err);
+        modalErrorEl.textContent = "Error al guardar el evento";
+        modalErrorEl.style.display = "block";
+      }
+    });
+
+    // Abrir modal desde botones globales
+    document
+      .getElementById("add-event-main")
+      .addEventListener("click", () => {
+        const date = state.selectedDate || new Date();
+        openModal(formatDateKey(date));
+      });
+
+    document
+      .getElementById("add-event-side")
+      .addEventListener("click", () => {
+        const date = state.selectedDate || new Date();
+        openModal(formatDateKey(date));
+      });
+
+    // Cerrar modal clickeando fuera
+    modalBackdrop.addEventListener("click", (e) => {
+      if (e.target === modalBackdrop) closeModal();
+    });
+
+    // ===============================
+    // Controles de mes
+    // ===============================
+    document.getElementById("prev-month").addEventListener("click", () => {
+      const d = state.currentMonth;
+      state.currentMonth = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+      loadEventsForMonth();
+    });
+
+    document.getElementById("next-month").addEventListener("click", () => {
+      const d = state.currentMonth;
+      state.currentMonth = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+      loadEventsForMonth();
+    });
+
+    document.getElementById("today-btn").addEventListener("click", () => {
+      const now = new Date();
+      state.currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      state.selectedDate = now;
+      loadEventsForMonth();
+    });
+
+    // ===============================
+    // Init
+    // ===============================
+    (function init() {
+      const now = new Date();
+      state.currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      state.selectedDate = now;
+      loadEventsForMonth();
+    })();
+  </script>
+</body>
+</html>
